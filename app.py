@@ -38,9 +38,9 @@ MODEL_TIERS = {
     "pro":      "llama-3.3-70b-versatile",   # 🔥 Yüksek kalite (daha yüksek temp + token)
 }
 MODEL_PARAMS = {
-    "fast":     {"max_tokens": 524, "temperature": 0.65},
-    "balanced": {"max_tokens": 1036, "temperature": 0.72},
-    "pro":      {"max_tokens": 1648, "temperature": 0.82},
+    "fast":     {"max_tokens": 400, "temperature": 0.6},
+    "balanced": {"max_tokens": 800, "temperature": 0.7},
+    "pro":      {"max_tokens": 1200, "temperature": 0.75},
 }
 
 BASE_SYSTEM_PROMPT = """Sen Emir.ai'sin — zeki, samimi ve yardımsever bir Türkçe yapay zeka asistanı.
