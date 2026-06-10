@@ -1,0 +1,24 @@
+# ─── Web Framework ───────────────────────────────
+Flask==3.1.0
+Werkzeug==3.1.3          # Flask bağımlılığı; session/cookie güvenliği
+
+# ─── AI / LLM ────────────────────────────────────
+groq==0.13.1              # Groq API istemcisi (Llama 3.1 / 3.3 / Llama 4)
+
+# ─── Web Arama ────────────────────────────────────
+duckduckgo-search==6.3.7  # DDG arama (internet_ara fonksiyonu)
+
+# ─── Veritabanı ───────────────────────────────────
+psycopg2-binary==2.9.10   # PostgreSQL adaptörü (binary = derleme gerektirmez)
+
+# ─── Şifreleme ────────────────────────────────────
+bcrypt==4.2.1             # Şifre hashing (cost=12); SHA-256 fallback var ama kullanma
+
+# ─── Ortam Değişkenleri ───────────────────────────
+python-dotenv==1.0.1      # .env dosyası okuma
+
+# ─── Production WSGI ──────────────────────────────
+gunicorn==23.0.0          # Production sunucu (Render/Railway/VPS için)
+
+# ─── Opsiyonel: CORS (farklı origin'den erişim gerekirse) ─────────────────
+# Flask-Cors==4.0.1
