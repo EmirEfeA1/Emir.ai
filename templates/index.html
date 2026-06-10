@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Emir.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Ambient background -->
+<div class="blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+<canvas id="waveCanvas"></canvas>
+<div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
+
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="/static/logo.png" alt="Emir.ai" onerror="this.style.display='none'">
+    </div>
+    <div class="login-title">Emir.ai'ye Hoş Geldin</div>
+
+    <!-- Tab bar -->
+    <div style="display:flex;gap:0;background:var(--s2);border-radius:var(--r2);padding:3px;margin-bottom:4px">
+      <button id="tabLogin"
+        onclick="switchAuthTab('login')"
+        style="flex:1;padding:7px;border-radius:8px;border:none;
+               font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;
+               background:var(--ac);color:#fff">
+        Giriş Yap
+      </button>
+      <button id="tabRegister"
+        onclick="switchAuthTab('register')"
+        style="flex:1;padding:7px;border-radius:8px;border:none;
+               font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;
+               background:transparent;color:var(--t3)">
+        Kayıt Ol
+      </button>
+    </div>
+
+    <!-- Login alanları -->
+    <div id="loginFields" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Kullanıcı Adı</label>
+        <input class="form-input" id="loginUser" placeholder="kullanici_adi" value="demo">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Şifre</label>
+        <input class="form-input" id="loginPass" type="password" placeholder="••••••••">
+      </div>
+    </div>
+
+    <!-- Register alanları -->
+    <div id="regFields" style="display:none;flex-direction:column;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Kullanıcı Adı</label>
+        <input class="form-input" id="regUser" placeholder="kullanici_adi" maxlength="32">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">E-posta</label>
+        <input class="form-input" id="regEmail" type="email" placeholder="sen@ornek.com">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Şifre</label>
+        <input class="form-input" id="regPass" type="password" placeholder="En az 6 karakter">
+      </div>
+    </div>
+
+    <div class="login-err" id="loginErr"></div>
+
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--t2);margin-top:-4px">
+      <input type="checkbox" id="rememberMe" style="width:14px;height:14px;accent-color:var(--ac);cursor:pointer">
+      30 gün boyunca beni hatırla
+    </label>
+
+    <!-- Login butonu -->
+    <button id="loginBtn" class="btn-primary" style="width:100%;padding:11px" onclick="doLogin()">
+      Giriş Yap
+    </button>
+    <!-- Register butonu -->
+    <button id="registerBtn" class="btn-primary" style="width:100%;padding:11px;display:none" onclick="doRegister()">
+      Hesap Oluştur
+    </button>
+
+    <div style="font-size:11px;color:var(--t3);text-align:center">
+      Demo: <strong style="color:var(--t2)">demo</strong> / <strong style="color:var(--t2)">demo123</strong>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-wrap" id="profileModal">
+  <div class="modal">
+    <div class="modal-title">Profil & Ayarlar</div>
+    <div class="modal-sub">Kişisel tercihlerini ve bot kişiliğini özelleştir</div>
+    <div class="form-group">
+      <label class="form-label">Profil Fotoğrafı</label>
+      <div class="av-row">
+        <div class="av-prev" id="avPrev" onclick="document.getElementById('avFile').click()"><span>?</span></div>
+        <div class="av-hint">Fotoğraf seç veya baş harfin görünsün.<br><a onclick="document.getElementById('avFile').click()">Fotoğraf yükle</a></div>
+        <input type="file" id="avFile" accept="image/*" style="display:none" onchange="onAvPick(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">İsmin</label>
+      <input class="form-input" id="inName" placeholder="Adını yaz…" maxlength="24">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bot Kişiliği (Ek Prompt)</label>
+      <textarea class="form-textarea" id="inPrompt" placeholder="Örnek: Çok samimi konuş, kısa cevaplar ver, argo kullanabilirsin…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">İptal</button>
+      <button class="btn-primary" onclick="saveProfile()">Kaydet</button>
+    </div>
+
+    <!-- Admin + Çıkış butonları — JS tarafından currentUser'a göre gösterilir/gizlenir -->
+    <div id="modalAdminRow" style="display:none;margin-top:4px">
+      <a id="btnAdminPanel" href="/admin" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;
+               width:100%;padding:10px;border-radius:10px;border:none;
+               background:linear-gradient(135deg,#7c3aed,#4f46e5);
+               color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+               text-decoration:none;transition:opacity 0.15s"
+        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Admin Paneli
+      </a>
+    </div>
+
+    <button id="btnLogout" onclick="doLogout()"
+      style="width:100%;margin-top:4px;padding:10px;border-radius:10px;
+             border:1px solid var(--b2);background:transparent;
+             color:var(--err,#f87171);font-size:13px;font-weight:600;
+             cursor:pointer;transition:all 0.15s"
+      onmouseover="this.style.background='rgba(248,113,113,0.08)'"
+      onmouseout="this.style.background='transparent'">
+      🚪 Çıkış Yap
+    </button>
+  </div>
+</div>
+
+<!-- Image viewer -->
+<div class="viewer" id="viewer" onclick="closeViewer()">
+  <img src="" alt="" onclick="event.stopPropagation()">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input for image attach -->
+<input type="file" id="imgFile" accept="image/*" style="display:none">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">
+      <img src="/static/logo.png" alt="Emir.ai" class="sb-logo-img" onerror="this.outerHTML='<span style=&quot;font-size:18px;font-weight:700;color:var(--ac2)&quot;>Emir.ai</span>'">
+    </div>
+    <button class="btn-new" onclick="newChat()">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Yeni sohbet
+    </button>
+  </div>
+
+  <!-- Model selector -->
+  <div class="model-bar">
+    <button class="model-btn" data-tier="fast"     onclick="setTier('fast')">⚡ Hızlı</button>
+    <button class="model-btn active" data-tier="balanced" onclick="setTier('balanced')">🧠 Dengeli</button>
+    <button class="model-btn" data-tier="pro"      onclick="setTier('pro')">🔥 Pro</button>
+  </div>
+
+  <div class="sb-list" id="chatList"></div>
+
+  <div class="sb-bottom">
+    <!-- Theme switcher -->
+    <div class="theme-row">
+      <div class="theme-dot t-dark active"    data-theme="dark"      title="Ultra Karanlık" onclick="applyTheme('dark')"></div>
+      <div class="theme-dot t-purple"         data-theme="purple"    title="Mor Tema"       onclick="applyTheme('purple')"></div>
+      <div class="theme-dot t-black"          data-theme="blackhole" title="Kara Delik"     onclick="applyTheme('blackhole')"></div>
+    </div>
+
+    <div class="profile-card" onclick="openModal()" style="margin-top:8px">
+      <div class="pf-av" id="sbAv">?</div>
+      <div class="pf-meta">
+        <div class="pf-name" id="sbName">Kullanıcı</div>
+        <div class="pf-sub">llama · ücretsiz</div>
+      </div>
+      <div class="pf-gear">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <header class="topbar">
+    <button class="btn-menu" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span class="topbar-title" id="topTitle">Emir.ai</span>
+    <div class="topbar-right">
+      <button class="btn-tts" id="btnTts" onclick="toggleTts()" title="Sesli okuma">
+        <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span class="status-text">çevrimiçi</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="chat"></div>
+
+  <div class="input-area">
+    <div class="input-shell">
+      <textarea id="msgInput" placeholder="Bir şeyler yaz…" rows="1"></textarea>
+      <div class="input-actions">
+        <button class="btn-attach" onclick="handleAttach()" title="Görsel ekle">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <button class="btn-send" id="btnSend" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="input-hint">Enter — gönder &nbsp;·&nbsp; Shift+Enter — yeni satır &nbsp;·&nbsp; 📎 — görsel</div>
+  </div>
+</main>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
