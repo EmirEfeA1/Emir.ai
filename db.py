@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = os.getenv("sql7.freesqldatabase.com", "")
 
 # ── psycopg2 ────────────────────────────────────────
 try:
